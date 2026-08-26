@@ -1,0 +1,41 @@
+.site-back-button {
+  position: fixed;
+  top: 78px;
+  left: 278px;
+  z-index: 25;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 34px;
+  padding: 0 10px;
+  border: 1px solid var(--border-light, #e2e8f0);
+  border-radius: 8px;
+  background: var(--bg-card, #ffffff);
+  color: var(--text-main, #0f172a);
+  box-shadow: 0 2px 8px rgba(15, 23, 42, .08);
+  font: inherit;
+  font-size: .78rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.site-back-button:hover {
+  border-color: var(--blue-primary, #2563eb);
+  color: var(--blue-primary, #2563eb);
+}
+
+@media (max-width: 1024px) {
+  .site-back-button {
+    top: 68px;
+    left: 16px;
+  }
+}
+
+@media (max-width: 640px) {
+  .site-back-button {
+    top: 68px;
+    left: 12px;
+    min-height: 32px;
+    padding: 0 8px;
+  }
+}

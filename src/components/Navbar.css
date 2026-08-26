@@ -1,0 +1,177 @@
+/* src/components/Navbar.css */
+
+.main-navbar {
+  position: sticky;
+  top: 0;
+  background-color: #ffffff;
+  border-bottom: 1px solid #e5e7eb;
+  z-index: 30;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.navbar-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
+  height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* Logo */
+.brand-logo {
+  font-size: 20px;
+  font-weight: 800;
+  color: #1f2937;
+  text-decoration: none;
+}
+
+.brand-logo span {
+  color: #2563eb;
+}
+
+/* Nav Links */
+.navbar-links {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+
+.nav-item {
+  color: #4b5563;
+  text-decoration: none;
+  font-weight: 500;
+  font-size: 14px;
+  transition: color 0.2s;
+}
+
+.nav-item:hover {
+  color: #2563eb;
+}
+
+.admin-link {
+  color: #7c3aed;
+  font-weight: 600;
+}
+
+/* Actions */
+.navbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.social-links {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.social-icon {
+  color: #6b7280;
+  transition: transform 0.2s, color 0.2s;
+}
+
+.social-icon:hover {
+  transform: translateY(-2px);
+}
+
+.social-icon.whatsapp:hover { color: #25D366; }
+.social-icon.facebook:hover { color: #1877F2; }
+.social-icon.youtube:hover { color: #FF0000; }
+
+.divider-line {
+  width: 1px;
+  height: 24px;
+  background-color: #e5e7eb;
+}
+
+/* Notification Button & Badge */
+.notification-wrapper {
+  position: relative;
+}
+
+.icon-btn {
+  background: none;
+  border: none;
+  color: #4b5563;
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  transition: background-color 0.2s;
+}
+
+.icon-btn:hover {
+  background-color: #f3f4f6;
+  color: #1f2937;
+}
+
+.notification-badge {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  background-color: #ef4444;
+  color: #ffffff;
+  font-size: 10px;
+  font-weight: bold;
+  border-radius: 10px;
+  padding: 2px 5px;
+}
+
+/* Dropdown */
+.notifications-dropdown {
+  position: absolute;
+  right: 0;
+  top: 45px;
+  width: 260px;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  padding: 12px;
+}
+
+.dropdown-header {
+  font-weight: 700;
+  font-size: 14px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #f3f4f6;
+  margin-bottom: 8px;
+}
+
+.empty-text {
+  font-size: 13px;
+  color: #9ca3af;
+  text-align: center;
+  margin: 12px 0;
+}
+
+/* Logout Button */
+.logout-btn {
+  background-color: #f3f4f6;
+  color: #374151;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.logout-btn:hover {
+  background-color: #fee2e2;
+  color: #dc2626;
+}
+
+.nav-link-button {
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  font-family: inherit;
+}
