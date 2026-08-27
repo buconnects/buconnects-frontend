@@ -23,11 +23,18 @@ export default function UserDashboard() {
   const [activeTab, setActiveTab] = useState('social');
   const canManageCampusContent = ['ADMIN', 'DEVELOPER'].includes(user?.role || 'USER');
 
-  // Dynamic state populated from backend API
+  // Dynamic state & Loading indicators
   const [marketItems, setMarketItems] = useState([]);
+  const [loadingMarket, setLoadingMarket] = useState(false);
+
   const [campusUpdates, setCampusUpdates] = useState([]);
+  const [loadingUpdates, setLoadingUpdates] = useState(false);
+
   const [campusEvents, setCampusEvents] = useState([]);
+  const [loadingEvents, setLoadingEvents] = useState(false);
+
   const [hostelListings, setHostelListings] = useState([]);
+  const [loadingHostels, setLoadingHostels] = useState(false);
 
   // Toast notification on login
   useEffect(() => {
@@ -85,40 +92,52 @@ export default function UserDashboard() {
     cover_image: ''
   });
 
-  // API Data Fetching Handlers
+  // API Data Fetching Handlers with Loading State
   const fetchMarketItems = async () => {
+    setLoadingMarket(true);
     try {
       const data = await apiClient('/marketplace');
       setMarketItems(Array.isArray(data) ? data : data?.items || []);
     } catch (error) {
       console.error('Failed to fetch marketplace items:', error.message);
+    } finally {
+      setLoadingMarket(false);
     }
   };
 
   const fetchCampusUpdates = async () => {
+    setLoadingUpdates(true);
     try {
       const data = await apiClient('/updates');
       setCampusUpdates(Array.isArray(data) ? data : data?.updates || []);
     } catch (error) {
       console.error('Failed to fetch campus updates:', error.message);
+    } finally {
+      setLoadingUpdates(false);
     }
   };
 
   const fetchCampusEvents = async () => {
+    setLoadingEvents(true);
     try {
       const data = await apiClient('/events');
       setCampusEvents(Array.isArray(data) ? data : data?.events || []);
     } catch (error) {
       console.error('Failed to fetch campus events:', error.message);
+    } finally {
+      setLoadingEvents(false);
     }
   };
 
   const fetchHostels = async () => {
+    setLoadingHostels(true);
     try {
       const data = await apiClient('/hostels');
       setHostelListings(Array.isArray(data) ? data : data?.hostels || []);
     } catch (error) {
       console.error('Failed to fetch hostels:', error.message);
+    } finally {
+      setLoadingHostels(false);
     }
   };
 
@@ -375,7 +394,7 @@ export default function UserDashboard() {
     }
 
     if (targetId === user?.id) {
-      alert('You cannot initiate a inquiry chat with yourself.');
+      alert('You cannot initiate an inquiry chat with yourself.');
       return;
     }
 
@@ -383,6 +402,26 @@ export default function UserDashboard() {
       id: targetId,
       name: targetName
     });
+  };
+
+  // SKELETON LOADERS
+  const renderSkeletons = (count = 3, hasImage = false) => {
+    return Array.from({ length: count }).map((_, idx) => (
+      <div key={idx} className="skeleton-card">
+        {hasImage && <div className="skeleton-box" style={{ width: '100%', height: '180px' }} />}
+        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+          <div className="skeleton-box" style={{ width: '80px', height: '22px' }} />
+          <div className="skeleton-box" style={{ width: '70px', height: '22px' }} />
+        </div>
+        <div className="skeleton-box" style={{ width: '60%', height: '24px', marginTop: '6px' }} />
+        <div className="skeleton-box" style={{ width: '100%', height: '14px', marginTop: '6px' }} />
+        <div className="skeleton-box" style={{ width: '85%', height: '14px' }} />
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '12px', paddingTop: '12px', borderTop: '1px solid var(--border-light)' }}>
+          <div className="skeleton-box" style={{ width: '40%', height: '16px' }} />
+          <div className="skeleton-box" style={{ width: '70px', height: '28px' }} />
+        </div>
+      </div>
+    ));
   };
 
   return (
@@ -555,8 +594,10 @@ export default function UserDashboard() {
 
             <div className="module-grid">
               <div className="module-list">
-                {marketItems.length === 0 ? (
-                  <p className="no-data-msg">No market items listed yet.</p>
+                {loadingMarket ? (
+                  renderSkeletons(3)
+                ) : marketItems.length === 0 ? (
+                  <p className="no-data-msg">Loading took much time, refresh the browser to load market items</p>
                 ) : (
                   marketItems.map((item) => (
                     <article key={item.id || item.item_id} className="listing-card market-card">
@@ -642,8 +683,10 @@ export default function UserDashboard() {
 
             <div className="module-grid">
               <div className="module-list">
-                {campusUpdates.length === 0 ? (
-                  <p className="no-data-msg">No updates available right now.</p>
+                {loadingUpdates ? (
+                  renderSkeletons(3)
+                ) : campusUpdates.length === 0 ? (
+                  <p className="no-data-msg">Loading updates failed, refresh the browser to load updates</p>
                 ) : (
                   campusUpdates.map((item) => (
                     <article key={item.id} className="listing-card update-card">
@@ -706,7 +749,9 @@ export default function UserDashboard() {
 
             <div className="module-grid">
               <div className="module-list">
-                {campusEvents.length === 0 ? (
+                {loadingEvents ? (
+                  renderSkeletons(3)
+                ) : campusEvents.length === 0 ? (
                   <p className="no-data-msg">No upcoming events listed.</p>
                 ) : (
                   campusEvents.map((item) => (
@@ -773,7 +818,9 @@ export default function UserDashboard() {
 
             <div className="module-grid">
               <div className="module-list">
-                {hostelListings.length === 0 ? (
+                {loadingHostels ? (
+                  renderSkeletons(3, true)
+                ) : hostelListings.length === 0 ? (
                   <p className="no-data-msg">No hostel listings available.</p>
                 ) : (
                   hostelListings.map((item) => {

@@ -936,3 +936,47 @@ body {
   font-size: 0.7rem;
   font-weight: 800;
 }
+
+
+/* ==========================================
+   7. SKELETON LOADING ANIMATIONS & CARDS
+   ========================================== */
+@keyframes skeleton-pulse {
+  0% {
+    background-color: #e2e8f0;
+  }
+  50% {
+    background-color: #f1f5f9;
+  }
+  100% {
+    background-color: #e2e8f0;
+  }
+}
+
+[data-theme='dark'] @keyframes skeleton-pulse {
+  0% {
+    background-color: #1e293b;
+  }
+  50% {
+    background-color: #334155;
+  }
+  100% {
+    background-color: #1e293b;
+  }
+}
+
+.skeleton-box {
+  animation: skeleton-pulse 1.5s infinite ease-in-out;
+  border-radius: var(--radius-sm);
+  display: block;
+}
+
+.skeleton-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-light);
+  border-radius: 18px;
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
