@@ -7,23 +7,33 @@ import apiClient from '../services/apiClient';
 import io from 'socket.io-client';
 import './SocialFeed.css';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://buconnects-backend-to2j.onrender.com';
 let socket;
 
-// HELPER: Resolves relative uploaded media paths to full backend URLs
+// HELPER: Resolves relative uploaded media paths & transforms legacy localhost URLs to live server
 const getMediaUrl = (path) => {
   if (!path) return '';
-  const rawPath = Array.isArray(path) ? path[0] : path;
+  let rawPath = Array.isArray(path) ? path[0] : path;
   if (typeof rawPath !== 'string') return '';
+
+  // 1. Determine active backend host
+  const activeBackend = (import.meta.env.VITE_API_URL || 'https://buconnects-backend-to2j.onrender.com')
+    .replace(/\/api\/?$/, '')
+    .replace(/\/+$/, '');
+
+  // 2. Fix legacy localhost URLs stored in MySQL
+  if (rawPath.startsWith('http://localhost:5000') || rawPath.startsWith('http://127.0.0.1:5000')) {
+    rawPath = rawPath.replace(/^http:\/\/(localhost|127\.0\.0\.1):5000/, '');
+  }
+
+  // 3. Return as-is if it is an external HTTPS link
   if (rawPath.startsWith('http://') || rawPath.startsWith('https://')) {
     return rawPath;
   }
-  
-  const backendOrigin = (import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api')
-    .replace(/\/api\/?$/, '');
 
+  // 4. Append clean relative path to backend origin
   const cleanPath = rawPath.startsWith('/') ? rawPath : `/${rawPath}`;
-  return `${backendOrigin}${cleanPath}`;
+  return `${activeBackend}${cleanPath}`;
 };
 
 export default function SocialFeed({ onStartChat }) {
@@ -55,7 +65,7 @@ export default function SocialFeed({ onStartChat }) {
   const [usersLoading, setUsersLoading] = useState(false);
   const [usersError, setUsersError] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
-  
+
   // Drawer Active Conversation State
   const [activeChatUser, setActiveChatUser] = useState(null);
   const [drawerMessages, setDrawerMessages] = useState([]);
@@ -137,7 +147,6 @@ export default function SocialFeed({ onStartChat }) {
     }
   };
 
-  // Reusing the same send message payload structure as Chat.jsx
   const handleSendDrawerMessage = async (e) => {
     e.preventDefault();
     if (!drawerInputMessage.trim() || !activeChatUser) return;
@@ -499,7 +508,7 @@ export default function SocialFeed({ onStartChat }) {
                             alt="Post Attachment"
                             style={styles.media}
                             onError={(e) => {
-                              console.error('Failed to load post image:', mediaSrc);
+                              console.error('Failed to load post image from:', mediaSrc);
                             }}
                           />
                           <span className="feed-media-hint"><ImageIcon size={16} /> Open image</span>
