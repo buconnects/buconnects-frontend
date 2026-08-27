@@ -36,6 +36,39 @@ const getMediaUrl = (path) => {
   return `${activeBackend}${cleanPath}`;
 };
 
+// SKELETON LOADERS
+const PostSkeleton = () => (
+  <div style={styles.postCard}>
+    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1rem' }}>
+      <div style={{ ...styles.skeleton, width: '40px', height: '40px', borderRadius: '50%' }} />
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', flex: 1 }}>
+        <div style={{ ...styles.skeleton, width: '35%', height: '14px' }} />
+        <div style={{ ...styles.skeleton, width: '20%', height: '10px' }} />
+      </div>
+    </div>
+    <div style={{ ...styles.skeleton, width: '90%', height: '14px', marginBottom: '0.5rem' }} />
+    <div style={{ ...styles.skeleton, width: '75%', height: '14px', marginBottom: '1rem' }} />
+    <div style={{ ...styles.skeleton, width: '100%', height: '180px', borderRadius: '12px' }} />
+  </div>
+);
+
+const ChatSkeleton = () => (
+  <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', padding: '0.5rem 0' }}>
+    <div style={{ alignSelf: 'flex-start', width: '60%' }}>
+      <div style={{ ...styles.skeleton, height: '36px', borderRadius: '12px' }} />
+    </div>
+    <div style={{ alignSelf: 'flex-end', width: '55%' }}>
+      <div style={{ ...styles.skeleton, height: '36px', borderRadius: '12px' }} />
+    </div>
+    <div style={{ alignSelf: 'flex-start', width: '40%' }}>
+      <div style={{ ...styles.skeleton, height: '36px', borderRadius: '12px' }} />
+    </div>
+    <div style={{ alignSelf: 'flex-end', width: '70%' }}>
+      <div style={{ ...styles.skeleton, height: '36px', borderRadius: '12px' }} />
+    </div>
+  </div>
+);
+
 export default function SocialFeed({ onStartChat }) {
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -334,15 +367,6 @@ export default function SocialFeed({ onStartChat }) {
     return nameMatches || campusMatches;
   });
 
-  if (loading) {
-    return (
-      <div style={styles.centerContainer}>
-        <div style={styles.spinner}></div>
-        <p style={{ marginTop: '1rem', color: '#64748b', fontWeight: '500' }}>Loading feed...</p>
-      </div>
-    );
-  }
-
   if (error) {
     return (
       <div style={styles.centerContainer}>
@@ -365,9 +389,9 @@ export default function SocialFeed({ onStartChat }) {
           from { transform: translateX(100%); }
           to { transform: translateX(0); }
         }
-        @keyframes spin {
-          0% { transform: rotate(0deg); }
-          100% { transform: rotate(360deg); }
+        @keyframes shimmer {
+          0% { background-position: -200px 0; }
+          100% { background-position: 200px 0; }
         }
         .feed-card {
           transition: transform 0.2s ease, box-shadow 0.2s ease;
@@ -461,9 +485,15 @@ export default function SocialFeed({ onStartChat }) {
           </div>
         </form>
 
-        {/* POSTS LIST */}
+        {/* POSTS LIST OR SKELETON LOADING */}
         <div style={styles.feedList}>
-          {posts.length === 0 ? (
+          {loading ? (
+            <>
+              <PostSkeleton />
+              <PostSkeleton />
+              <PostSkeleton />
+            </>
+          ) : posts.length === 0 ? (
             <div style={styles.emptyState}>
               <span style={{ fontSize: '2.5rem' }}>📣</span>
               <p style={{ margin: '0.5rem 0 0', fontWeight: '600', color: '#475569' }}>No posts yet</p>
@@ -645,9 +675,18 @@ export default function SocialFeed({ onStartChat }) {
 
                 <div style={styles.drawerBody}>
                   {usersLoading ? (
-                    <div style={styles.centerContainer}>
-                      <div style={styles.spinner}></div>
-                      <p style={{ marginTop: '0.75rem', color: '#64748b', fontSize: '0.85rem' }}>Fetching users...</p>
+                    <div style={{ padding: '1rem' }}>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
+                        {[...Array(5)].map((_, idx) => (
+                          <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '0.85rem', padding: '0.5rem' }}>
+                            <div style={{ ...styles.skeleton, width: '42px', height: '42px', borderRadius: '50%' }} />
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem', flex: 1 }}>
+                              <div style={{ ...styles.skeleton, width: '50%', height: '12px' }} />
+                              <div style={{ ...styles.skeleton, width: '30%', height: '10px' }} />
+                            </div>
+                          </div>
+                        ))}
+                      </div>
                     </div>
                   ) : usersError ? (
                     <div style={styles.errorBox}>
@@ -700,7 +739,7 @@ export default function SocialFeed({ onStartChat }) {
 
                 <div style={{ flex: 1, padding: '1rem', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                   {messagesLoading ? (
-                    <p style={{ textAlign: 'center', color: '#64748b' }}>Loading chat history...</p>
+                    <ChatSkeleton />
                   ) : drawerMessages.length === 0 ? (
                     <p style={{ textAlign: 'center', color: '#94a3b8' }}>No messages yet. Say hi!</p>
                   ) : (
@@ -745,6 +784,13 @@ export default function SocialFeed({ onStartChat }) {
 }
 
 const styles = {
+  skeleton: {
+    backgroundColor: '#e2e8f0',
+    backgroundImage: 'linear-gradient(90deg, #e2e8f0 0px, #f1f5f9 40px, #e2e8f0 80px)',
+    backgroundSize: '350px 100%',
+    animation: 'shimmer 1.5s infinite linear',
+    borderRadius: '6px',
+  },
   pageWrapper: {
     backgroundColor: '#f8fafc',
     minHeight: '100vh',
@@ -763,14 +809,6 @@ const styles = {
     alignItems: 'center',
     justifyContent: 'center',
     padding: '2rem 1rem',
-  },
-  spinner: {
-    width: '32px',
-    height: '32px',
-    border: '3px solid #e2e8f0',
-    borderTop: '3px solid #2563eb',
-    borderRadius: '50%',
-    animation: 'spin 0.8s linear infinite',
   },
   errorBox: {
     backgroundColor: '#fef2f2',
