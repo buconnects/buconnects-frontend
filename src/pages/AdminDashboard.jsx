@@ -75,7 +75,7 @@ const AdminDashboard = () => {
       {/* Header Bar */}
       <header className="dashboard-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
         <div>
-          <h1 style={{ fontSize: '1.75rem', fontWeight: '800', margin: 0 }}>System Control Panel 🛠️</h1>
+          <h1 style={{ fontSize: '1.75rem', fontWeight: '800', margin: 0, color: '#000000' }}>System Control Panel </h1>
           <p className="subtitle" style={{ color: '#64748b', margin: '0.25rem 0 0 0' }}>
             Administrator & Developer Infrastructure Operations
           </p>
@@ -129,7 +129,7 @@ const AdminDashboard = () => {
       {/* User Management Section */}
       <div className="admin-toolbar">
         <div>
-          <h2 style={{ fontSize: '1.25rem', fontWeight: '700', margin: 0 }}>System Accounts</h2>
+          <h2 style={{ fontSize: '1.25rem', fontWeight: '700', margin: 0, color: '#000000ff' }}>System Accounts</h2>
           <p style={{ fontSize: '0.85rem', color: '#64748b', margin: '0.2rem 0 0 0' }}>
             Manage and monitor registered platform accounts
           </p>
