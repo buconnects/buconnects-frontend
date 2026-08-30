@@ -954,7 +954,8 @@ body {
   }
 }
 
-[data-theme='dark'] @keyframes skeleton-pulse {
+/* 1. Define keyframes at the root level of your CSS file */
+@keyframes skeleton-pulse-dark {
   0% {
     background-color: #1e293b;
   }
@@ -964,6 +965,11 @@ body {
   100% {
     background-color: #1e293b;
   }
+}
+
+/* 2. Apply the animation using your theme attribute */
+[data-theme='dark'] .skeleton {
+  animation: skeleton-pulse-dark 1.5s infinite ease-in-out;
 }
 
 .skeleton-box {
