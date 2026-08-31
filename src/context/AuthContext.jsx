@@ -29,15 +29,11 @@ export function AuthProvider({ children }) {
 
   const register = async (formData) => {
     const res = await API.post("/auth/register", formData);
-    const { token: newToken, user: userData } = res.data;
-    const normalizedUser = { ...userData, role: normalizeRole(userData.role) };
-
-    localStorage.setItem("token", newToken);
-    localStorage.setItem("user", JSON.stringify(normalizedUser));
-
-    setToken(newToken);
-    setUser(normalizedUser);
-    return normalizedUser;
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    setToken(null);
+    setUser(null);
+    return res.data;
   };
 
   const logout = () => {

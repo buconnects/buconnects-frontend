@@ -98,7 +98,33 @@ export default function Profile({ onProfileUpdated }) {
     }
   };
 
-  if (loading) return <div className="profile-loading">Loading your profile...</div>;
+  if (loading) {
+    return (
+      <section className="profile-container">
+        <div className="profile-heading">
+          <div>
+            <p className="profile-eyebrow">Your campus identity</p>
+            <h1>My Profile</h1>
+          </div>
+        </div>
+
+        <div className="profile-layout">
+          <aside className="profile-summary" style={{ display: 'grid', placeItems: 'center', gap: '1rem' }}>
+            <div className="profile-avatar" style={{ width: '120px', height: '120px', borderRadius: '50%', background: '#e2e8f0', animation: 'pulse 1.5s ease-in-out infinite' }} />
+            <div className="skeleton-line" style={{ width: '80%', height: '18px', background: '#e2e8f0', borderRadius: '999px' }} />
+            <div className="skeleton-line" style={{ width: '60%', height: '12px', background: '#e2e8f0', borderRadius: '999px' }} />
+          </aside>
+
+          <div className="profile-form" style={{ display: 'grid', gap: '1rem' }}>
+            <div className="skeleton-line" style={{ width: '35%', height: '22px', background: '#e2e8f0', borderRadius: '999px' }} />
+            <div className="skeleton-line" style={{ width: '100%', height: '52px', background: '#e2e8f0', borderRadius: '12px' }} />
+            <div className="skeleton-line" style={{ width: '100%', height: '52px', background: '#e2e8f0', borderRadius: '12px' }} />
+            <div className="skeleton-line" style={{ width: '100%', height: '52px', background: '#e2e8f0', borderRadius: '12px' }} />
+          </div>
+        </div>
+      </section>
+    );
+  }
 
   const displayedAvatar = previewUrl || profile.avatarUrl;
   const initials = (profile.fullName || 'User').charAt(0).toUpperCase();

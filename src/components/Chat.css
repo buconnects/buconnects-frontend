@@ -263,6 +263,88 @@
 }
 
 /* --- Input Footer --- */
+.reply-preview-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.65rem 0.9rem;
+  border-radius: 12px;
+  border: 1px solid #dbeafe;
+  background: #eff6ff;
+  color: #1d4ed8;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.reply-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.reply-cancel-btn {
+  background: transparent;
+  border: none;
+  color: #1d4ed8;
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.message-reply-preview {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  margin-bottom: 0.55rem;
+  padding: 0.45rem 0.6rem;
+  border-left: 3px solid rgba(37, 99, 235, 0.6);
+  border-radius: 8px;
+  background: rgba(15, 23, 42, 0.05);
+  color: inherit;
+  opacity: 0.9;
+}
+
+.reply-author {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.voice-btn,
+.attach-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 50%;
+  color: var(--text-muted);
+  transition: all 0.2s ease;
+}
+
+.voice-btn:hover,
+.attach-btn:hover {
+  background-color: var(--bg-input);
+  color: var(--blue-primary);
+}
+
+.voice-btn.recording {
+  background-color: #fee2e2;
+  color: #dc2626;
+}
+
+.recording-label {
+  min-width: 42px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #dc2626;
+}
+
 .chat-footer {
   display: flex;
   align-items: center;
@@ -270,22 +352,6 @@
   padding: 14px 18px;
   background-color: var(--bg-card);
   border-top: 1px solid var(--border-light);
-}
-
-.attach-btn {
-  background: none;
-  border: none;
-  font-size: 1.25rem;
-  cursor: pointer;
-  padding: 6px;
-  border-radius: 50%;
-  color: var(--text-muted);
-  transition: all 0.2s ease;
-}
-
-.attach-btn:hover {
-  background-color: var(--bg-input);
-  color: var(--blue-primary);
 }
 
 .chat-footer input[type="text"] {
@@ -330,4 +396,15 @@
   color: var(--text-muted);
   cursor: not-allowed;
   box-shadow: none;
+}
+
+.voice-note-player {
+  width: min(240px, 100%);
+  display: block;
+  margin-top: 6px;
+  border-radius: 8px;
+}
+
+.file-attachment-block {
+  margin-bottom: 0.4rem;
 }

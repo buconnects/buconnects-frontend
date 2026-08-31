@@ -254,32 +254,33 @@ export default function SocialFeed({ onStartChat }) {
   const handleToggleLike = async (postId) => {
     try {
       const response = await postService.toggleLike(postId);
-      const isLiked = response.status === 'liked';
+      const isLiked = Boolean(response?.isLiked ?? response?.liked ?? response?.status === 'liked');
 
       setPosts((prevPosts) =>
         prevPosts.map((post) => {
-          if (post.id === postId) {
-            return {
-              ...post,
-              isLikedByMe: isLiked,
-              likesCount: isLiked
-                ? Number(post.likesCount) + 1
-                : Math.max(0, Number(post.likesCount) - 1),
-            };
-          }
-          return post;
+          if (post.id !== postId) return post;
+
+          const prevLiked = Boolean(post.isLikedByMe);
+          const delta = isLiked && !prevLiked ? 1 : !isLiked && prevLiked ? -1 : 0;
+
+          return {
+            ...post,
+            isLikedByMe: isLiked,
+            likesCount: Math.max(0, Number(post.likesCount || 0) + delta),
+          };
         })
       );
     } catch (err) {
       console.error('Like action failed:', err);
+      alert(`Error toggling like: ${err.message}`);
     }
   };
 
   const handleAddComment = async (e, postId) => {
     e.preventDefault();
-    const commentText = commentInputs[postId];
+    const commentText = (commentInputs[postId] ?? '').trim();
 
-    if (!commentText || !commentText.trim()) return;
+    if (!commentText) return;
 
     try {
       setSubmittingComment((prev) => ({ ...prev, [postId]: true }));
@@ -287,14 +288,16 @@ export default function SocialFeed({ onStartChat }) {
 
       setPosts((prevPosts) =>
         prevPosts.map((post) => {
-          if (post.id === postId) {
-            return {
-              ...post,
-              commentsCount: Number(post.commentsCount) + 1,
-              comments: [...(post.comments || []), newComment],
-            };
-          }
-          return post;
+          if (post.id !== postId) return post;
+
+          const existingComments = post.comments || [];
+          const commentAlreadyExists = existingComments.some((comment) => String(comment.id) === String(newComment.id));
+
+          return {
+            ...post,
+            commentsCount: Math.max(0, Number(post.commentsCount || 0) + (commentAlreadyExists ? 0 : 1)),
+            comments: commentAlreadyExists ? existingComments : [...existingComments, newComment],
+          };
         })
       );
 

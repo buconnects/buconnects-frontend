@@ -110,7 +110,36 @@ export default function Settings({ embedded = false }) {
     }
   };
 
-  if (loading) return <div className={`settings-loading ${embedded ? 'settings-embedded' : ''}`}>Loading settings...</div>;
+  if (loading) {
+    return (
+      <div className={`settings-container ${embedded ? 'settings-embedded' : ''}`}>
+        <div className="settings-heading">
+          <div>
+            <p className="settings-eyebrow">Personal workspace</p>
+            <h1 className="settings-title">Account Settings</h1>
+          </div>
+        </div>
+
+        <div className="settings-tabs" style={{ display: 'flex', gap: '0.75rem', marginBottom: '1rem' }}>
+          {[...Array(4)].map((_, index) => (
+            <div key={index} className="skeleton-line" style={{ width: '110px', height: '38px', background: '#e2e8f0', borderRadius: '999px' }} />
+          ))}
+        </div>
+
+        <div className="settings-form" style={{ display: 'grid', gap: '1rem' }}>
+          {[...Array(3)].map((_, index) => (
+            <div key={index} className="setting-row" style={{ display: 'flex', justifyContent: 'space-between', gap: '1rem', padding: '0.85rem 0' }}>
+              <div style={{ flex: 1, display: 'grid', gap: '0.5rem' }}>
+                <div className="skeleton-line" style={{ width: '35%', height: '14px', background: '#e2e8f0', borderRadius: '999px' }} />
+                <div className="skeleton-line" style={{ width: '60%', height: '12px', background: '#e2e8f0', borderRadius: '999px' }} />
+              </div>
+              <div className="skeleton-line" style={{ width: '44px', height: '24px', background: '#e2e8f0', borderRadius: '999px' }} />
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className={`settings-container ${embedded ? 'settings-embedded' : ''}`}>

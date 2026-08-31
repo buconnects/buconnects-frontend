@@ -166,9 +166,19 @@ const AdminDashboard = () => {
 
       <div className="admin-table-container">
         {loading ? (
-          <div style={{ padding: '3rem', textAlign: 'center', color: '#64748b' }}>
-            <RefreshCw size={24} className="spin" style={{ marginBottom: '0.5rem' }} />
-            <p>Fetching account records...</p>
+          <div style={{ padding: '1.5rem 0' }}>
+            <div style={{ display: 'grid', gap: '0.85rem' }}>
+              {[...Array(5)].map((_, idx) => (
+                <div key={idx} style={{ display: 'grid', gridTemplateColumns: '1.8fr 2fr 1fr 1.2fr 1.2fr 0.8fr', gap: '1rem', padding: '0.85rem 0.5rem', borderBottom: '1px solid #e2e8f0' }}>
+                  <div style={{ height: '18px', background: '#e2e8f0', borderRadius: '999px' }} />
+                  <div style={{ height: '18px', background: '#e2e8f0', borderRadius: '999px' }} />
+                  <div style={{ height: '18px', background: '#e2e8f0', borderRadius: '999px' }} />
+                  <div style={{ height: '18px', background: '#e2e8f0', borderRadius: '999px' }} />
+                  <div style={{ height: '18px', background: '#e2e8f0', borderRadius: '999px' }} />
+                  <div style={{ height: '18px', background: '#e2e8f0', borderRadius: '999px' }} />
+                </div>
+              ))}
+            </div>
           </div>
         ) : filteredUsers.length === 0 ? (
           <div style={{ padding: '3rem', textAlign: 'center', color: '#64748b' }}>
