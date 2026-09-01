@@ -3,16 +3,17 @@ import io from 'socket.io-client';
 import axios from 'axios';
 import './Chat.css';
 import { useLocation } from 'react-router-dom';
-import { ArrowLeft, Mic, MicOff, Paperclip, Send, Reply } from 'lucide-react';
+import { ArrowLeft, Mic, MicOff, Paperclip, Send, Reply, Trash2 } from 'lucide-react';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 const socket = io(API_BASE_URL);
 
-export default function Chat({ currentUserId, currentUserName, targetUserId: propTargetId, targetUserName: propTargetName, onBack }) {
+export default function Chat({ currentUserId, currentUserName, targetUserId: propTargetId, targetUserName: propTargetName, targetUserAvatar: propTargetAvatar, onBack }) {
   const location = useLocation();
 
   const targetUserId = location.state?.selectedUser?.id || location.state?.targetUserId || propTargetId;
   const targetUserName = location.state?.selectedUser?.name || location.state?.targetUserName || propTargetName || 'Chat Partner';
+  const targetUserAvatar = location.state?.selectedUser?.avatar_url || location.state?.selectedUser?.avatarUrl || propTargetAvatar || null;
 
   const [message, setMessage] = useState('');
   const [chatLog, setChatLog] = useState([]);
@@ -88,6 +89,28 @@ export default function Chat({ currentUserId, currentUserName, targetUserId: pro
       markMessagesAsRead();
     };
 
+    const handleMessageDeleted = ({ roomId: deletedRoomId, messageId }) => {
+      if (deletedRoomId !== roomId) return;
+
+      setChatLog((prev) =>
+        prev.map((msg) => {
+          const msgId = msg.id || msg.tempId;
+          if (String(msgId) === String(messageId)) {
+            return {
+              ...msg,
+              is_deleted: true,
+              deleted_at: new Date().toISOString(),
+              message: 'This message was deleted',
+              message_type: 'text',
+              file_url: null,
+              file_name: null,
+            };
+          }
+          return msg;
+        })
+      );
+    };
+
     const handleMessagesRead = ({ readerId, senderId }) => {
       if (String(readerId) === String(targetUserId) && String(senderId) === String(currentUserId)) {
         setChatLog((prev) =>
@@ -111,12 +134,14 @@ export default function Chat({ currentUserId, currentUserName, targetUserId: pro
     };
 
     socket.on('receive_message', handleReceiveMessage);
+    socket.on('message_deleted', handleMessageDeleted);
     socket.on('messages_marked_read', handleMessagesRead);
     socket.on('user_typing', handleUserTyping);
     socket.on('user_stop_typing', handleUserStopTyping);
 
     return () => {
       socket.off('receive_message', handleReceiveMessage);
+      socket.off('message_deleted', handleMessageDeleted);
       socket.off('messages_marked_read', handleMessagesRead);
       socket.off('user_typing', handleUserTyping);
       socket.off('user_stop_typing', handleUserStopTyping);
@@ -213,6 +238,35 @@ export default function Chat({ currentUserId, currentUserName, targetUserId: pro
     }
 
     swipeStartRef.current = null;
+  };
+
+  const handleDeleteMessage = (msg) => {
+    const messageId = msg.id || msg.tempId;
+    if (!messageId || String(msg.sender_id || msg.senderId) !== String(currentUserId)) return;
+
+    socket.emit('delete_message', {
+      roomId,
+      messageId,
+      userId: currentUserId,
+    });
+
+    setChatLog((prev) =>
+      prev.map((item) => {
+        const itemId = item.id || item.tempId;
+        if (String(itemId) === String(messageId)) {
+          return {
+            ...item,
+            is_deleted: true,
+            deleted_at: new Date().toISOString(),
+            message: 'This message was deleted',
+            message_type: 'text',
+            file_url: null,
+            file_name: null,
+          };
+        }
+        return item;
+      })
+    );
   };
 
   const startVoiceRecording = async () => {
@@ -321,6 +375,8 @@ export default function Chat({ currentUserId, currentUserName, targetUserId: pro
       file_name: fileName,
       fileName: fileName,
       is_read: false,
+      is_deleted: false,
+      deleted_at: null,
       status: 'sent',
       reply_to: replyTo ? {
         id: replyTo.id,
@@ -353,7 +409,11 @@ export default function Chat({ currentUserId, currentUserName, targetUserId: pro
             <ArrowLeft size={20} />
           </button>
         )}
-        <div className="user-avatar">{targetUserName ? targetUserName.charAt(0).toUpperCase() : 'C'}</div>
+        {targetUserAvatar ? (
+          <img src={targetUserAvatar} alt={targetUserName} className="user-avatar user-avatar-image" />
+        ) : (
+          <div className="user-avatar">{targetUserName ? targetUserName.charAt(0).toUpperCase() : 'C'}</div>
+        )}
         <div className="user-info">
           <h4>{targetUserName}</h4>
           <span className="status-badge"><span className="dot"></span> Online</span>
@@ -375,6 +435,7 @@ export default function Chat({ currentUserId, currentUserName, targetUserId: pro
           const fileUrl = msg.file_url || msg.fileUrl;
           const fileName = msg.file_name || msg.fileName;
           const replyMeta = msg.reply_to || msg.replyTo;
+          const isDeleted = Boolean(msg.is_deleted || msg.deleted_at);
           const status = msg.status || (msg.is_read ? 'read' : isMine ? 'delivered' : '');
 
           const time = new Date(msg.created_at || Date.now()).toLocaleTimeString([], {
@@ -392,14 +453,20 @@ export default function Chat({ currentUserId, currentUserName, targetUserId: pro
               onMouseUp={(event) => handleSwipeEnd(event, msg)}
             >
               <div className="message-bubble">
-                {replyMeta && (
+                {isMine && !isDeleted && (
+                  <button type="button" className="delete-message-btn" onClick={() => handleDeleteMessage(msg)} aria-label="Delete message">
+                    <Trash2 size={14} />
+                  </button>
+                )}
+
+                {replyMeta && !isDeleted && (
                   <div className="message-reply-preview">
                     <span className="reply-author">{replyMeta.authorName || 'Reply'}</span>
                     <span>{replyMeta.message || 'Attachment'}</span>
                   </div>
                 )}
 
-                {msgType === 'image' && fileUrl && (
+                {!isDeleted && msgType === 'image' && fileUrl && (
                   <div className="attachment-container">
                     <button
                       type="button"
@@ -410,7 +477,7 @@ export default function Chat({ currentUserId, currentUserName, targetUserId: pro
                     </button>
                   </div>
                 )}
-                {msgType === 'file' && fileUrl && (
+                {!isDeleted && msgType === 'file' && fileUrl && (
                   <div className="file-attachment-block">
                     {fileUrl.toLowerCase().includes('.mp3') || fileUrl.toLowerCase().includes('.wav') || fileUrl.toLowerCase().includes('.m4a') || fileUrl.toLowerCase().includes('.webm') ? (
                       <audio controls src={fileUrl} className="voice-note-player" />
@@ -421,10 +488,14 @@ export default function Chat({ currentUserId, currentUserName, targetUserId: pro
                     )}
                   </div>
                 )}
-                {msg.message && <p className="message-text">{msg.message}</p>}
+                {isDeleted ? (
+                  <p className="message-text deleted-message-text">This message was deleted</p>
+                ) : msg.message ? (
+                  <p className="message-text">{msg.message}</p>
+                ) : null}
                 <div className="message-meta">
                   <span className="timestamp">{time}</span>
-                  {isMine && status && (
+                  {isMine && !isDeleted && status && (
                     <span className={`read-status ${status === 'read' ? 'read' : 'sent'}`}>
                       {status === 'read' ? '✓✓' : status === 'delivered' ? '✓✓' : '✓'}
                     </span>

@@ -77,6 +77,13 @@
   align-items: center;
   justify-content: center;
   font-weight: bold;
+  object-fit: cover;
+  background: #e0f2fe;
+}
+
+.user-avatar-image {
+  display: block;
+  flex-shrink: 0;
 }
 
 .presence-dot {

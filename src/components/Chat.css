@@ -81,6 +81,11 @@
   align-items: center;
   justify-content: center;
   border: 1px solid rgba(37, 99, 235, 0.2);
+  object-fit: cover;
+}
+
+.user-avatar-image {
+  display: block;
 }
 
 .user-info h4 {
@@ -157,6 +162,28 @@
   margin: 0;
   font-size: 0.95rem;
   line-height: 1.45;
+}
+
+.deleted-message-text {
+  font-style: italic;
+  opacity: 0.8;
+}
+
+.delete-message-btn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  border: none;
+  background: rgba(255, 255, 255, 0.15);
+  color: inherit;
+  border-radius: 999px;
+  width: 22px;
+  height: 22px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  opacity: 0.9;
 }
 
 /* --- Attachments --- */

@@ -492,6 +492,7 @@ export default function Dashboard() {
                   currentUserName={user?.name}
                   targetUserId={selectedUser.id}
                   targetUserName={selectedUser.name}
+                  targetUserAvatar={selectedUser.avatar_url || selectedUser.avatarUrl}
                   onBack={() => setSelectedUser(null)}
                 />
               ) : (

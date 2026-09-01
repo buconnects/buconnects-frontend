@@ -86,6 +86,8 @@ export default function ConversationList({ currentUserId, onSelectUser, activeTa
             ? new Date(user.lastMessageTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) 
             : '';
 
+          const avatarUrl = user.avatar_url || user.avatarUrl;
+
           return (
             <div
               key={user.id}
@@ -93,7 +95,11 @@ export default function ConversationList({ currentUserId, onSelectUser, activeTa
               onClick={() => handleSelectContact(user)}
             >
               <div className="avatar-wrapper">
-                <div className="user-avatar">{user.name.charAt(0).toUpperCase()}</div>
+                {avatarUrl ? (
+                  <img src={avatarUrl} alt={user.name} className="user-avatar user-avatar-image" />
+                ) : (
+                  <div className="user-avatar">{user.name.charAt(0).toUpperCase()}</div>
+                )}
                 <span className={`presence-dot ${isOnline ? 'online' : 'offline'}`}></span>
               </div>
 
