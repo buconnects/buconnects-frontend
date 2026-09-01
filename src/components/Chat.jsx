@@ -71,10 +71,21 @@ export default function Chat({ currentUserId, currentUserName, targetUserId: pro
     axios.get(`${API_BASE_URL}/api/users/history/${roomId}`)
       .then((res) => {
         setChatLog(
-          (Array.isArray(res.data) ? res.data : []).map((msg) => ({
-            ...msg,
-            status: msg.is_read ? 'read' : 'delivered',
-          }))
+          (Array.isArray(res.data) ? res.data : []).map((msg) => {
+            const normalizedMessage = String(msg.message || '').trim();
+            const isDeleted = normalizedMessage === 'This message was deleted';
+
+            return {
+              ...msg,
+              is_deleted: isDeleted,
+              deleted_at: isDeleted ? (msg.deleted_at || new Date().toISOString()) : null,
+              status: msg.is_read ? 'read' : 'delivered',
+              message: isDeleted ? 'This message was deleted' : msg.message,
+              message_type: isDeleted ? 'text' : msg.message_type,
+              file_url: isDeleted ? null : msg.file_url,
+              file_name: isDeleted ? null : msg.file_name,
+            };
+          })
         );
         markMessagesAsRead();
       })
