@@ -18,10 +18,14 @@ export default function Chat({ currentUserId, currentUserName, targetUserId: pro
   const [chatLog, setChatLog] = useState([]);
   const [isTyping, setIsTyping] = useState(false);
   const [selectedFile, setSelectedFile] = useState(null);
+  const [selectedImagePreview, setSelectedImagePreview] = useState(null);
   const [isUploading, setIsUploading] = useState(false);
   const [replyTo, setReplyTo] = useState(null);
   const [isRecording, setIsRecording] = useState(false);
   const [recordingSeconds, setRecordingSeconds] = useState(0);
+  const [viewerImage, setViewerImage] = useState(null);
+  const [viewerIndex, setViewerIndex] = useState(0);
+  const [zoomLevel, setZoomLevel] = useState(1);
 
   const messagesEndRef = useRef(null);
   const typingTimeoutRef = useRef(null);
@@ -124,6 +128,18 @@ export default function Chat({ currentUserId, currentUserName, targetUserId: pro
   }, [chatLog, isTyping, selectedFile, replyTo]);
 
   useEffect(() => {
+    if (!selectedFile || !selectedFile.type?.startsWith('image/')) {
+      setSelectedImagePreview(null);
+      return;
+    }
+
+    const objectUrl = URL.createObjectURL(selectedFile);
+    setSelectedImagePreview(objectUrl);
+
+    return () => URL.revokeObjectURL(objectUrl);
+  }, [selectedFile]);
+
+  useEffect(() => {
     return () => {
       if (recordingTimerRef.current) clearInterval(recordingTimerRef.current);
       if (recorderRef.current && recorderRef.current.state !== 'inactive') {
@@ -131,6 +147,45 @@ export default function Chat({ currentUserId, currentUserName, targetUserId: pro
       }
     };
   }, []);
+
+  const imageGallery = chatLog.filter((msg) => {
+    const msgType = msg.message_type || msg.messageType;
+    const fileUrl = msg.file_url || msg.fileUrl;
+    return msgType === 'image' && fileUrl;
+  }).map((msg) => msg.file_url || msg.fileUrl);
+
+  const openImageViewer = (url) => {
+    const index = imageGallery.findIndex((item) => item === url);
+    setViewerImage(url);
+    setViewerIndex(index >= 0 ? index : 0);
+    setZoomLevel(1);
+  };
+
+  const shiftViewerImage = (direction) => {
+    if (!imageGallery.length) return;
+
+    const nextIndex = (viewerIndex + direction + imageGallery.length) % imageGallery.length;
+    setViewerImage(imageGallery[nextIndex]);
+    setViewerIndex(nextIndex);
+    setZoomLevel(1);
+  };
+
+  const touchStartXRef = useRef(null);
+
+  const handleViewerTouchStart = (event) => {
+    touchStartXRef.current = event.changedTouches?.[0]?.clientX ?? null;
+  };
+
+  const handleViewerTouchEnd = (event) => {
+    if (touchStartXRef.current === null) return;
+
+    const diffX = (event.changedTouches?.[0]?.clientX ?? touchStartXRef.current) - touchStartXRef.current;
+    if (Math.abs(diffX) > 60) {
+      shiftViewerImage(diffX < 0 ? 1 : -1);
+    }
+
+    touchStartXRef.current = null;
+  };
 
   const handleInputChange = (e) => {
     setMessage(e.target.value);
@@ -205,6 +260,12 @@ export default function Chat({ currentUserId, currentUserName, targetUserId: pro
       recordingTimerRef.current = null;
     }
     setIsRecording(false);
+  };
+
+  const handleFileSelection = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setSelectedFile(file);
   };
 
   const handleSendMessage = async (e) => {
@@ -340,7 +401,13 @@ export default function Chat({ currentUserId, currentUserName, targetUserId: pro
 
                 {msgType === 'image' && fileUrl && (
                   <div className="attachment-container">
-                    <img src={fileUrl} alt="Attachment" className="chat-image-attachment" />
+                    <button
+                      type="button"
+                      className="image-open-btn"
+                      onClick={() => openImageViewer(fileUrl)}
+                    >
+                      <img src={fileUrl} alt="Attachment" className="chat-image-attachment" />
+                    </button>
                   </div>
                 )}
                 {msgType === 'file' && fileUrl && (
@@ -383,10 +450,60 @@ export default function Chat({ currentUserId, currentUserName, targetUserId: pro
 
       {selectedFile && (
         <div className="file-preview-bar">
-          <span className="file-name">
-            {selectedFile.type?.startsWith('audio/') ? '🎙️' : '📎'} {selectedFile.name}
-          </span>
+          {selectedFile.type?.startsWith('image/') && selectedImagePreview ? (
+            <div className="attachment-preview-wrap">
+              <img
+                src={selectedImagePreview}
+                alt="Preview"
+                className="attachment-preview-image"
+                onClick={() => {
+                  setViewerImage(selectedImagePreview);
+                }}
+              />
+              <span className="file-name">{selectedFile.name}</span>
+            </div>
+          ) : (
+            <span className="file-name">
+              {selectedFile.type?.startsWith('audio/') ? '🎙️' : '📎'} {selectedFile.name}
+            </span>
+          )}
           <button type="button" className="remove-file-btn" onClick={() => setSelectedFile(null)}>×</button>
+        </div>
+      )}
+
+      {viewerImage && (
+        <div className="image-viewer-backdrop" onClick={() => setViewerImage(null)}>
+          <div className="image-viewer-modal" onClick={(e) => e.stopPropagation()} onTouchStart={handleViewerTouchStart} onTouchEnd={handleViewerTouchEnd}>
+            <button
+              type="button"
+              className="image-viewer-close"
+              onClick={() => setViewerImage(null)}
+              aria-label="Close image"
+            >
+              ×
+            </button>
+
+            {imageGallery.length > 1 && (
+              <>
+                <button type="button" className="image-nav-btn prev" onClick={() => shiftViewerImage(-1)} aria-label="Previous image">‹</button>
+                <button type="button" className="image-nav-btn next" onClick={() => shiftViewerImage(1)} aria-label="Next image">›</button>
+              </>
+            )}
+
+            <div className="image-viewer-controls">
+              <button type="button" className="zoom-btn" onClick={() => setZoomLevel((prev) => Math.max(1, Number((prev - 0.25).toFixed(2))))}>−</button>
+              <span>{zoomLevel.toFixed(2)}x</span>
+              <button type="button" className="zoom-btn" onClick={() => setZoomLevel((prev) => Math.min(3, Number((prev + 0.25).toFixed(2))))}>+</button>
+              <button type="button" className="zoom-btn reset" onClick={() => setZoomLevel(1)}>Reset</button>
+            </div>
+
+            <img
+              src={viewerImage}
+              alt="Full size view"
+              className="image-viewer-image"
+              style={{ transform: `scale(${zoomLevel})` }}
+            />
+          </div>
         </div>
       )}
 
@@ -396,7 +513,7 @@ export default function Chat({ currentUserId, currentUserName, targetUserId: pro
           ref={fileInputRef}
           accept="image/*,audio/*,.pdf,.doc,.docx,.txt"
           style={{ display: 'none' }}
-          onChange={(e) => setSelectedFile(e.target.files[0])}
+          onChange={handleFileSelection}
         />
 
         <button

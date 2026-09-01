@@ -91,6 +91,7 @@ export default function SocialFeed({ onStartChat }) {
   const [deletingComment, setDeletingComment] = useState({});
   const [selectedMedia, setSelectedMedia] = useState(null);
   const [reposting, setReposting] = useState({});
+  const [pendingLikeIds, setPendingLikeIds] = useState({});
 
   // Chat Drawer & Selected User States
   const [isChatDrawerOpen, setIsChatDrawerOpen] = useState(false);
@@ -252,27 +253,65 @@ export default function SocialFeed({ onStartChat }) {
   };
 
   const handleToggleLike = async (postId) => {
+    const post = posts.find((item) => item.id === postId);
+    if (!post) return;
+
+    const wasLiked = Boolean(post.isLikedByMe);
+    const optimisticLiked = !wasLiked;
+
+    setPendingLikeIds((prev) => ({ ...prev, [postId]: true }));
+    setPosts((prevPosts) =>
+      prevPosts.map((item) => {
+        if (item.id !== postId) return item;
+
+        const nextCount = Math.max(0, Number(item.likesCount || 0) + (optimisticLiked ? 1 : -1));
+        return {
+          ...item,
+          isLikedByMe: optimisticLiked,
+          likesCount: nextCount,
+        };
+      })
+    );
+
     try {
       const response = await postService.toggleLike(postId);
-      const isLiked = Boolean(response?.isLiked ?? response?.liked ?? response?.status === 'liked');
+      const serverLiked = Boolean(response?.isLiked ?? response?.liked ?? response?.status === 'liked');
 
+      if (serverLiked !== optimisticLiked) {
+        setPosts((prevPosts) =>
+          prevPosts.map((item) => {
+            if (item.id !== postId) return item;
+
+            const adjustedCount = Math.max(0, Number(item.likesCount || 0) + (serverLiked ? 1 : -1));
+            return {
+              ...item,
+              isLikedByMe: serverLiked,
+              likesCount: adjustedCount,
+            };
+          })
+        );
+      }
+    } catch (err) {
       setPosts((prevPosts) =>
-        prevPosts.map((post) => {
-          if (post.id !== postId) return post;
+        prevPosts.map((item) => {
+          if (item.id !== postId) return item;
 
-          const prevLiked = Boolean(post.isLikedByMe);
-          const delta = isLiked && !prevLiked ? 1 : !isLiked && prevLiked ? -1 : 0;
-
+          const revertedCount = Math.max(0, Number(item.likesCount || 0) + (wasLiked ? 0 : 0));
           return {
-            ...post,
-            isLikedByMe: isLiked,
-            likesCount: Math.max(0, Number(post.likesCount || 0) + delta),
+            ...item,
+            isLikedByMe: wasLiked,
+            likesCount: revertedCount + (wasLiked ? 1 : 0) - (optimisticLiked ? 1 : 0),
           };
         })
       );
-    } catch (err) {
       console.error('Like action failed:', err);
       alert(`Error toggling like: ${err.message}`);
+    } finally {
+      setPendingLikeIds((prev) => {
+        const next = { ...prev };
+        delete next[postId];
+        return next;
+      });
     }
   };
 
@@ -554,12 +593,15 @@ export default function SocialFeed({ onStartChat }) {
                     <button
                       onClick={() => handleToggleLike(post.id)}
                       className="action-btn"
+                      disabled={Boolean(pendingLikeIds[post.id])}
                       style={{
                         ...styles.actionButton,
-                        color: post.isLikedByMe ? '#ef4444' : '#64748b',
+                        color: post.isLikedByMe || pendingLikeIds[post.id] ? '#ef4444' : '#64748b',
+                        opacity: pendingLikeIds[post.id] ? 0.8 : 1,
+                        cursor: pendingLikeIds[post.id] ? 'wait' : 'pointer',
                       }}
                     >
-                      <Heart size={18} fill={post.isLikedByMe ? 'currentColor' : 'none'} />
+                      <Heart size={18} fill={post.isLikedByMe || pendingLikeIds[post.id] ? 'currentColor' : 'none'} />
                       <span>{post.likesCount || 0} Likes</span>
                     </button>
 

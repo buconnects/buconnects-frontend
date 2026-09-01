@@ -332,6 +332,29 @@ export default function UserDashboard() {
     fetchNotifications();
   }, []);
 
+  const playNotificationTone = () => {
+    const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+    if (!AudioContextClass) return;
+
+    try {
+      const context = new AudioContextClass();
+      const oscillator = context.createOscillator();
+      const gainNode = context.createGain();
+
+      oscillator.type = 'triangle';
+      oscillator.frequency.value = 880;
+      gainNode.gain.value = 0.04;
+
+      oscillator.connect(gainNode);
+      gainNode.connect(context.destination);
+
+      oscillator.start();
+      oscillator.stop(context.currentTime + 0.18);
+    } catch (error) {
+      console.warn('Notification sound unavailable:', error);
+    }
+  };
+
   useEffect(() => {
     if (!user?.id) return undefined;
     const notificationSocket = io(import.meta.env.VITE_API_URL || 'http://localhost:5000');
@@ -339,6 +362,7 @@ export default function UserDashboard() {
     notificationSocket.on('new_notification', (notification) => {
       setNotifications((previous) => [{ ...notification, id: `${Date.now()}-${notification.type}` }, ...previous]);
       setUnreadCount((count) => count + 1);
+      playNotificationTone();
     });
 
     const refreshNotifications = async () => {

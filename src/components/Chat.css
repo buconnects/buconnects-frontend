@@ -167,6 +167,15 @@
   max-width: 280px;
 }
 
+.image-open-btn {
+  border: none;
+  background: transparent;
+  padding: 0;
+  margin: 0;
+  width: 100%;
+  cursor: pointer;
+}
+
 .chat-image-attachment {
   width: 100%;
   height: auto;
@@ -245,12 +254,30 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 12px;
   padding: 8px 16px;
   background-color: var(--blue-soft);
   border-top: 1px solid var(--border-light);
   font-size: 0.85rem;
   color: var(--blue-primary);
   font-weight: 500;
+}
+
+.attachment-preview-wrap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  flex: 1;
+}
+
+.attachment-preview-image {
+  width: 54px;
+  height: 54px;
+  object-fit: cover;
+  border-radius: 10px;
+  border: 1px solid rgba(37, 99, 235, 0.2);
+  cursor: pointer;
 }
 
 .remove-file-btn {
@@ -260,6 +287,114 @@
   font-size: 1.2rem;
   cursor: pointer;
   line-height: 1;
+}
+
+.image-viewer-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1200;
+  padding: 20px;
+}
+
+.image-viewer-modal {
+  position: relative;
+  max-width: min(90vw, 820px);
+  max-height: 90vh;
+  background: #ffffff;
+  border-radius: 18px;
+  padding: 14px;
+  box-shadow: 0 20px 50px rgba(15, 23, 42, 0.35);
+  overflow: hidden;
+}
+
+.image-viewer-image {
+  display: block;
+  max-width: 100%;
+  max-height: 80vh;
+  border-radius: 12px;
+  object-fit: contain;
+  transition: transform 0.2s ease;
+  transform-origin: center center;
+}
+
+.image-viewer-close {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 34px;
+  height: 34px;
+  border: none;
+  border-radius: 50%;
+  background: rgba(15, 23, 42, 0.8);
+  color: #ffffff;
+  font-size: 1.4rem;
+  cursor: pointer;
+  z-index: 2;
+}
+
+.image-nav-btn,
+.zoom-btn {
+  border: none;
+  background: rgba(15, 23, 42, 0.75);
+  color: #ffffff;
+  cursor: pointer;
+  border-radius: 999px;
+  transition: opacity 0.2s ease;
+}
+
+.image-nav-btn:hover,
+.zoom-btn:hover {
+  opacity: 0.9;
+}
+
+.image-nav-btn {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 42px;
+  height: 42px;
+  font-size: 2rem;
+  z-index: 2;
+}
+
+.image-nav-btn.prev {
+  left: 12px;
+}
+
+.image-nav-btn.next {
+  right: 12px;
+}
+
+.image-viewer-controls {
+  position: absolute;
+  bottom: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.7);
+  color: #ffffff;
+  font-size: 0.8rem;
+  z-index: 2;
+}
+
+.zoom-btn {
+  width: 30px;
+  height: 30px;
+  font-size: 1.2rem;
+}
+
+.zoom-btn.reset {
+  width: auto;
+  padding: 0 10px;
+  font-size: 0.75rem;
 }
 
 /* --- Input Footer --- */
