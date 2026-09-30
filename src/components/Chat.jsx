@@ -22,6 +22,7 @@ export default function Chat({ currentUserId, currentUserName, targetUserId: pro
   const [selectedFile, setSelectedFile] = useState(null);
   const [selectedImagePreview, setSelectedImagePreview] = useState(null);
   const [isUploading, setIsUploading] = useState(false);
+  const [uploadError, setUploadError] = useState('');
   const [replyTo, setReplyTo] = useState(null);
   const [isRecording, setIsRecording] = useState(false);
   const [recordingSeconds, setRecordingSeconds] = useState(0);
@@ -332,6 +333,7 @@ export default function Chat({ currentUserId, currentUserName, targetUserId: pro
     const file = e.target.files?.[0];
     if (!file) return;
     setSelectedFile(file);
+    setUploadError('');
   };
 
   const handleSendMessage = async (e) => {
@@ -344,6 +346,7 @@ export default function Chat({ currentUserId, currentUserName, targetUserId: pro
 
     if (selectedFile) {
       setIsUploading(true);
+      setUploadError('');
       const formData = new FormData();
       formData.append('file', selectedFile);
       const token = localStorage.getItem('token');
@@ -357,7 +360,9 @@ export default function Chat({ currentUserId, currentUserName, targetUserId: pro
         });
         attachmentData = uploadRes.data;
       } catch (err) {
-        console.error('File upload failed:', err);
+        const message = err.response?.data?.error || err.message || 'File upload failed.';
+        console.error('File upload failed:', message, err.response?.data);
+        setUploadError(message);
         setIsUploading(false);
         return;
       }
@@ -550,9 +555,10 @@ export default function Chat({ currentUserId, currentUserName, targetUserId: pro
               {selectedFile.type?.startsWith('audio/') ? '🎙️' : '📎'} {selectedFile.name}
             </span>
           )}
-          <button type="button" className="remove-file-btn" onClick={() => setSelectedFile(null)}>×</button>
+          <button type="button" className="remove-file-btn" onClick={() => { setSelectedFile(null); setUploadError(''); }}>×</button>
         </div>
       )}
+      {uploadError && <p className="upload-error" role="alert">{uploadError}</p>}
 
       {viewerImage && (
         <div className="image-viewer-backdrop" onClick={() => setViewerImage(null)}>
