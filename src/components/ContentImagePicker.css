@@ -1,0 +1,121 @@
+.content-image-picker {
+  display: grid;
+  gap: 8px;
+  grid-column: 1 / -1;
+}
+
+.content-image-picker-label {
+  display: grid;
+  gap: 7px;
+  color: var(--text-muted, #64748b);
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+.content-image-picker-label input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+}
+
+.content-image-picker-control {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  width: fit-content;
+  padding: 8px 11px;
+  border: 1px solid var(--border-light, #e2e8f0);
+  border-radius: 6px;
+  background: var(--bg-card, #fff);
+  color: var(--text-main, #0f172a);
+  cursor: pointer;
+}
+
+.content-image-picker-label:focus-within .content-image-picker-control {
+  outline: 2px solid var(--blue-primary, #2563eb);
+  outline-offset: 2px;
+}
+
+.content-image-preview {
+  position: relative;
+  width: min(100%, 260px);
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  border: 1px solid var(--border-light, #e2e8f0);
+  border-radius: 6px;
+  background: #f1f5f9;
+}
+
+.content-image-preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.content-image-preview button {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border: 0;
+  border-radius: 4px;
+  background: rgba(15, 23, 42, 0.82);
+  color: #fff;
+  cursor: pointer;
+}
+
+.content-image-error {
+  margin: 0;
+  color: #b91c1c;
+  font-size: 0.8rem;
+}
+
+.content-media-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.content-media {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  border: 1px solid var(--border-light, #e2e8f0);
+  border-radius: 6px;
+  background: #f1f5f9;
+}
+
+.content-media img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.content-media button {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border: 0;
+  border-radius: 4px;
+  background: rgba(127, 29, 29, 0.9);
+  color: #fff;
+  cursor: pointer;
+}
+
+.content-media button:disabled {
+  opacity: 0.55;
+  cursor: wait;
+}

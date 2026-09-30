@@ -5,12 +5,13 @@ import ConversationList from './../components/ConversationList';
 import Chat from './../components/Chat';
 import { useAuth } from './../context/AuthContext';
 import apiClient from '../services/apiClient'; 
-import { Rss, ShoppingBag, Megaphone, Calendar, Home, MessageSquare, User, Settings, LogOut, Menu, X, Bell } from 'lucide-react';
+import { Rss, ShoppingBag, Megaphone, Calendar, Home, MessageSquare, User, Settings, LogOut, Menu, X, Bell, Trash2 } from 'lucide-react';
 import './Dashboard.css';
 import Navbar from '../components/Navbar';
 import SettingsPage from './Settings';
 import Profile from './Profile';
 import { getMediaUrl } from '../utils/media';
+import ContentImagePicker, { ContentMedia } from '../components/ContentImagePicker';
 import { useLocation, useNavigate } from 'react-router-dom';
 
 export default function UserDashboard() {
@@ -92,6 +93,9 @@ export default function UserDashboard() {
     description: '',
     cover_image: ''
   });
+  const [selectedImages, setSelectedImages] = useState({ market: null, update: null, event: null, hostel: null });
+  const [imagePickerVersion, setImagePickerVersion] = useState({ market: 0, update: 0, event: 0, hostel: 0 });
+  const [deletingMediaKey, setDeletingMediaKey] = useState('');
 
   // API Data Fetching Handlers with Loading State
   const fetchMarketItems = async () => {
@@ -142,6 +146,50 @@ export default function UserDashboard() {
     }
   };
 
+  const uploadContentImage = async (file) => {
+    if (!file) return null;
+    const formData = new FormData();
+    formData.append('file', file);
+    const response = await apiClient('/users/upload', { method: 'POST', body: formData });
+    return response.fileUrl;
+  };
+
+  const resetImagePicker = (type) => {
+    setSelectedImages((previous) => ({ ...previous, [type]: null }));
+    setImagePickerVersion((previous) => ({ ...previous, [type]: previous[type] + 1 }));
+  };
+
+  const handleRemovePostedMedia = async (type, itemId, imageUrl) => {
+    const config = {
+      market: { endpoint: 'marketplace', setItems: setMarketItems, field: 'images', emptyValue: [] },
+      update: { endpoint: 'updates', setItems: setCampusUpdates, field: 'image_url', emptyValue: null },
+      event: { endpoint: 'events', setItems: setCampusEvents, field: 'image_url', emptyValue: null },
+      hostel: { endpoint: 'hostels', setItems: setHostelListings, field: 'cover_image', emptyValue: null },
+    }[type];
+    if (!config || !window.confirm('Remove this image from the published item?')) return;
+
+    const requestKey = `${type}:${itemId}:${imageUrl}`;
+    setDeletingMediaKey(requestKey);
+    try {
+      await apiClient(`/${config.endpoint}/${itemId}/media`, {
+        method: 'DELETE',
+        body: JSON.stringify({ imageUrl }),
+      });
+      config.setItems((previous) => previous.map((item) => {
+        if (String(item.id) !== String(itemId)) return item;
+        if (type === 'market') {
+          const remainingImages = (Array.isArray(item.images) ? item.images : []).filter((url) => url !== imageUrl);
+          return { ...item, images: remainingImages };
+        }
+        return { ...item, [config.field]: config.emptyValue };
+      }));
+    } catch (error) {
+      alert(error.message || 'Failed to remove image.');
+    } finally {
+      setDeletingMediaKey('');
+    }
+  };
+
   // Synchronize Tab selection with backend calls
   useEffect(() => {
     if (activeTab === 'market') fetchMarketItems();
@@ -157,6 +205,7 @@ export default function UserDashboard() {
 
     try {
       const numericPrice = parseFloat(marketForm.price.replace(/[^0-9.]/g, '')) || 0;
+      const imageUrl = await uploadContentImage(selectedImages.market);
       const payload = {
         title: marketForm.title,
         category: marketForm.category,
@@ -165,7 +214,8 @@ export default function UserDashboard() {
         campus: marketForm.campus,
         seller: marketForm.seller || user?.full_name || user?.name || 'Administrator',
         contact: marketForm.contact,
-        description: marketForm.description
+        description: marketForm.description,
+        images: imageUrl ? [imageUrl] : []
       };
 
       const response = await apiClient('/marketplace', {
@@ -185,6 +235,7 @@ export default function UserDashboard() {
         contact: '',
         description: ''
       });
+      resetImagePicker('market');
     } catch (error) {
       console.error('Failed to publish market item:', error.message);
       alert(error.message || 'Failed to post listing');
@@ -196,12 +247,14 @@ export default function UserDashboard() {
     if (!canManageCampusContent) return;
 
     try {
+      const imageUrl = await uploadContentImage(selectedImages.update);
       const payload = {
         title: updateForm.title,
         category: updateForm.category,
         audience: updateForm.audience,
         priority: updateForm.priority,
-        summary: updateForm.summary
+        summary: updateForm.summary,
+        image_url: imageUrl
       };
 
       const response = await apiClient('/updates', {
@@ -218,6 +271,7 @@ export default function UserDashboard() {
         priority: 'Medium',
         summary: ''
       });
+      resetImagePicker('update');
     } catch (error) {
       console.error('Failed to publish campus update:', error.message);
       alert(error.message || 'Failed to publish update');
@@ -229,6 +283,7 @@ export default function UserDashboard() {
     if (!canManageCampusContent) return;
 
     try {
+      const imageUrl = await uploadContentImage(selectedImages.event);
       const payload = {
         title: eventForm.title,
         date: eventForm.date,
@@ -238,7 +293,8 @@ export default function UserDashboard() {
         host: eventForm.host || user?.full_name || user?.name || 'Campus Office',
         capacity: eventForm.capacity || 'Open',
         description: eventForm.description,
-        status: 'Open for registration'
+        status: 'Open for registration',
+        image_url: imageUrl
       };
 
       const response = await apiClient('/events', {
@@ -258,6 +314,7 @@ export default function UserDashboard() {
         capacity: '',
         description: ''
       });
+      resetImagePicker('event');
     } catch (error) {
       console.error('Failed to create event:', error.message);
       alert(error.message || 'Failed to create event');
@@ -270,6 +327,7 @@ export default function UserDashboard() {
 
     try {
       const amenitiesArray = hostelForm.amenities.split(',').map((item) => item.trim()).filter(Boolean);
+      const imageUrl = await uploadContentImage(selectedImages.hostel);
       const payload = {
         name: hostelForm.name,
         location: hostelForm.location,
@@ -277,7 +335,7 @@ export default function UserDashboard() {
         amenities: amenitiesArray,
         contact_phone: hostelForm.contact_phone,
         description: hostelForm.description,
-        cover_image: hostelForm.cover_image
+        cover_image: imageUrl
       };
 
       const response = await apiClient('/hostels', {
@@ -296,6 +354,7 @@ export default function UserDashboard() {
         description: '',
         cover_image: ''
       });
+      resetImagePicker('hostel');
     } catch (error) {
       console.error('Failed to add hostel listing:', error.message);
       alert(error.message || 'Failed to add hostel');
@@ -633,6 +692,19 @@ export default function UserDashboard() {
                 ) : (
                   marketItems.map((item) => (
                     <article key={item.id || item.item_id} className="listing-card market-card">
+                      {Array.isArray(item.images) && item.images.length > 0 && (
+                        <div className="content-media-grid">
+                          {item.images.map((imageUrl, index) => (
+                            <ContentMedia
+                              key={`${item.id}-${index}`}
+                              url={imageUrl}
+                              alt={`Market item ${item.title}`}
+                              onRemove={canManageCampusContent ? () => handleRemovePostedMedia('market', item.id, imageUrl) : undefined}
+                              removing={deletingMediaKey === `market:${item.id}:${imageUrl}`}
+                            />
+                          ))}
+                        </div>
+                      )}
                       <div className="listing-topline">
                         <span className="category-pill">{item.category}</span>
                         <span className="price-tag">
@@ -695,6 +767,11 @@ export default function UserDashboard() {
                     <input value={marketForm.seller} onChange={(e) => setMarketForm({ ...marketForm, seller: e.target.value })} placeholder="Seller name" />
                     <input value={marketForm.contact} onChange={(e) => setMarketForm({ ...marketForm, contact: e.target.value })} placeholder="Contact number" required />
                     <textarea value={marketForm.description} onChange={(e) => setMarketForm({ ...marketForm, description: e.target.value })} placeholder="Item details" rows="4" required />
+                    <ContentImagePicker
+                      key={`market-image-${imagePickerVersion.market}`}
+                      label="Item image"
+                      onFileChange={(file) => setSelectedImages((previous) => ({ ...previous, market: file }))}
+                    />
                   </div>
                   <button type="submit" className="primary-button market-button">Publish listing</button>
                 </form>
@@ -722,6 +799,16 @@ export default function UserDashboard() {
                 ) : (
                   campusUpdates.map((item) => (
                     <article key={item.id} className="listing-card update-card">
+                      {item.image_url && (
+                        <div className="content-media-grid">
+                          <ContentMedia
+                            url={item.image_url}
+                            alt={`Campus update ${item.title}`}
+                            onRemove={canManageCampusContent ? () => handleRemovePostedMedia('update', item.id, item.image_url) : undefined}
+                            removing={deletingMediaKey === `update:${item.id}:${item.image_url}`}
+                          />
+                        </div>
+                      )}
                       <div className="listing-topline">
                         <span className="category-pill update-pill">{item.category}</span>
                         <span className={`priority-badge ${(item.priority || 'medium').toLowerCase()}`}>{item.priority}</span>
@@ -761,6 +848,11 @@ export default function UserDashboard() {
                       <option>High</option>
                     </select>
                     <textarea value={updateForm.summary} onChange={(e) => setUpdateForm({ ...updateForm, summary: e.target.value })} rows="5" placeholder="Write the update details" required />
+                    <ContentImagePicker
+                      key={`update-image-${imagePickerVersion.update}`}
+                      label="Update image"
+                      onFileChange={(file) => setSelectedImages((previous) => ({ ...previous, update: file }))}
+                    />
                   </div>
                   <button type="submit" className="primary-button update-button">Submit update</button>
                 </form>
@@ -788,6 +880,16 @@ export default function UserDashboard() {
                 ) : (
                   campusEvents.map((item) => (
                     <article key={item.id} className="listing-card event-card">
+                      {item.image_url && (
+                        <div className="content-media-grid">
+                          <ContentMedia
+                            url={item.image_url}
+                            alt={`Campus event ${item.title}`}
+                            onRemove={canManageCampusContent ? () => handleRemovePostedMedia('event', item.id, item.image_url) : undefined}
+                            removing={deletingMediaKey === `event:${item.id}:${item.image_url}`}
+                          />
+                        </div>
+                      )}
                       <div className="listing-topline">
                         <span className="category-pill event-pill">{item.category}</span>
                         <span className="status-pill">{item.status || 'Open'}</span>
@@ -830,6 +932,11 @@ export default function UserDashboard() {
                     <input value={eventForm.host} onChange={(e) => setEventForm({ ...eventForm, host: e.target.value })} placeholder="Host / organizing office" />
                     <input value={eventForm.capacity} onChange={(e) => setEventForm({ ...eventForm, capacity: e.target.value })} placeholder="Capacity / seats" />
                     <textarea value={eventForm.description} onChange={(e) => setEventForm({ ...eventForm, description: e.target.value })} rows="4" placeholder="Event description" required />
+                    <ContentImagePicker
+                      key={`event-image-${imagePickerVersion.event}`}
+                      label="Event image"
+                      onFileChange={(file) => setSelectedImages((previous) => ({ ...previous, event: file }))}
+                    />
                   </div>
                   <button type="submit" className="primary-button event-button">Publish event</button>
                 </form>
@@ -863,11 +970,14 @@ export default function UserDashboard() {
                     return (
                       <article key={item.id} className="listing-card hostel-card">
                         {item.cover_image && (
-                          <img 
-                            src={item.cover_image} 
-                            alt={item.name} 
-                            style={{ width: '100%', height: '180px', objectFit: 'cover', borderRadius: '8px', marginBottom: '0.75rem' }} 
-                          />
+                          <div className="content-media-grid">
+                            <ContentMedia
+                              url={item.cover_image}
+                              alt={`Hostel ${item.name}`}
+                              onRemove={canManageCampusContent ? () => handleRemovePostedMedia('hostel', item.id, item.cover_image) : undefined}
+                              removing={deletingMediaKey === `hostel:${item.id}:${item.cover_image}`}
+                            />
+                          </div>
                         )}
                         <div className="listing-topline">
                           <span className="category-pill">{item.location}</span>
@@ -922,7 +1032,11 @@ export default function UserDashboard() {
                     <input value={hostelForm.price_range} onChange={(e) => setHostelForm({ ...hostelForm, price_range: e.target.value })} placeholder="Price e.g. UGX 450,000 / Semester" required />
                     <input value={hostelForm.contact_phone} onChange={(e) => setHostelForm({ ...hostelForm, contact_phone: e.target.value })} placeholder="Contact Phone Number" required />
                     <input value={hostelForm.amenities} onChange={(e) => setHostelForm({ ...hostelForm, amenities: e.target.value })} placeholder="Amenities (comma separated)" />
-                    <input value={hostelForm.cover_image} onChange={(e) => setHostelForm({ ...hostelForm, cover_image: e.target.value })} placeholder="Cover Image URL (optional)" />
+                    <ContentImagePicker
+                      key={`hostel-image-${imagePickerVersion.hostel}`}
+                      label="Hostel cover image"
+                      onFileChange={(file) => setSelectedImages((previous) => ({ ...previous, hostel: file }))}
+                    />
                     <textarea value={hostelForm.description} onChange={(e) => setHostelForm({ ...hostelForm, description: e.target.value })} rows="4" placeholder="Detailed hostel description & room types" required />
                   </div>
                   <button type="submit" className="primary-button hostel-button">Publish Hostel</button>
