@@ -4,37 +4,12 @@ import { Heart, Image as ImageIcon, MessageCircle, Paperclip, Repeat2, Send, Tra
 import { useAuth } from '../context/AuthContext';
 import postService from '../services/postService';
 import apiClient from '../services/apiClient';
+import { getMediaUrl } from '../utils/media';
 import io from 'socket.io-client';
 import './SocialFeed.css';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://buconnects-backend-to2j.onrender.com';
 let socket;
-
-// HELPER: Resolves relative uploaded media paths & transforms legacy localhost URLs to live server
-const getMediaUrl = (path) => {
-  if (!path) return '';
-  let rawPath = Array.isArray(path) ? path[0] : path;
-  if (typeof rawPath !== 'string') return '';
-
-  // 1. Determine active backend host
-  const activeBackend = (import.meta.env.VITE_API_URL || 'https://buconnects-backend-to2j.onrender.com')
-    .replace(/\/api\/?$/, '')
-    .replace(/\/+$/, '');
-
-  // 2. Fix legacy localhost URLs stored in MySQL
-  if (rawPath.startsWith('http://localhost:5000') || rawPath.startsWith('http://127.0.0.1:5000')) {
-    rawPath = rawPath.replace(/^http:\/\/(localhost|127\.0\.0\.1):5000/, '');
-  }
-
-  // 3. Return as-is if it is an external HTTPS link
-  if (rawPath.startsWith('http://') || rawPath.startsWith('https://')) {
-    return rawPath;
-  }
-
-  // 4. Append clean relative path to backend origin
-  const cleanPath = rawPath.startsWith('/') ? rawPath : `/${rawPath}`;
-  return `${activeBackend}${cleanPath}`;
-};
 
 // SKELETON LOADERS
 const PostSkeleton = () => (

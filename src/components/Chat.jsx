@@ -4,6 +4,7 @@ import axios from 'axios';
 import './Chat.css';
 import { useLocation } from 'react-router-dom';
 import { ArrowLeft, Mic, MicOff, Paperclip, Send, Reply, Trash2 } from 'lucide-react';
+import { getMediaUrl } from '../utils/media';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 const socket = io(API_BASE_URL);
@@ -13,7 +14,7 @@ export default function Chat({ currentUserId, currentUserName, targetUserId: pro
 
   const targetUserId = location.state?.selectedUser?.id || location.state?.targetUserId || propTargetId;
   const targetUserName = location.state?.selectedUser?.name || location.state?.targetUserName || propTargetName || 'Chat Partner';
-  const targetUserAvatar = location.state?.selectedUser?.avatar_url || location.state?.selectedUser?.avatarUrl || propTargetAvatar || null;
+  const targetUserAvatar = getMediaUrl(location.state?.selectedUser?.avatar_url || location.state?.selectedUser?.avatarUrl || propTargetAvatar);
 
   const [message, setMessage] = useState('');
   const [chatLog, setChatLog] = useState([]);
@@ -188,7 +189,7 @@ export default function Chat({ currentUserId, currentUserName, targetUserId: pro
     const msgType = msg.message_type || msg.messageType;
     const fileUrl = msg.file_url || msg.fileUrl;
     return msgType === 'image' && fileUrl;
-  }).map((msg) => msg.file_url || msg.fileUrl);
+  }).map((msg) => getMediaUrl(msg.file_url || msg.fileUrl));
 
   const openImageViewer = (url) => {
     const index = imageGallery.findIndex((item) => item === url);
@@ -482,18 +483,18 @@ export default function Chat({ currentUserId, currentUserName, targetUserId: pro
                     <button
                       type="button"
                       className="image-open-btn"
-                      onClick={() => openImageViewer(fileUrl)}
+                      onClick={() => openImageViewer(getMediaUrl(fileUrl))}
                     >
-                      <img src={fileUrl} alt="Attachment" className="chat-image-attachment" />
+                      <img src={getMediaUrl(fileUrl)} alt="Attachment" className="chat-image-attachment" />
                     </button>
                   </div>
                 )}
                 {!isDeleted && msgType === 'file' && fileUrl && (
                   <div className="file-attachment-block">
                     {fileUrl.toLowerCase().includes('.mp3') || fileUrl.toLowerCase().includes('.wav') || fileUrl.toLowerCase().includes('.m4a') || fileUrl.toLowerCase().includes('.webm') ? (
-                      <audio controls src={fileUrl} className="voice-note-player" />
+                      <audio controls src={getMediaUrl(fileUrl)} className="voice-note-player" />
                     ) : (
-                      <a href={fileUrl} target="_blank" rel="noreferrer" className="chat-file-attachment">
+                      <a href={getMediaUrl(fileUrl)} target="_blank" rel="noreferrer" className="chat-file-attachment">
                         📄 {fileName || 'Download Attachment'}
                       </a>
                     )}

@@ -1,6 +1,13 @@
 // src/utils/media.js
 
 const DEFAULT_API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+const ACTIVE_BACKEND = DEFAULT_API_URL.replace(/\/api\/?$/, '').replace(/\/+$/, '');
+const LEGACY_BACKEND_HOSTS = new Set([
+  'localhost',
+  '127.0.0.1',
+  '::1',
+  'buconnects-backend-to2j.onrender.com',
+]);
 
 /**
  * Resolves media URLs (images, avatars, attachments) cleanly:
@@ -21,40 +28,22 @@ export const getMediaUrl = (path) => {
     return rawPath;
   }
 
-  // Determine active backend base origin without trailing /api or slashes
-  const activeBackend = DEFAULT_API_URL
-    .replace(/\/api\/?$/, '')
-    .replace(/\/+$/, '');
-
-  // Strip legacy localhost or render origins stored in MySQL
-  if (
-    rawPath.startsWith('http://localhost:5000') ||
-    rawPath.startsWith('http://127.0.0.1:5000') ||
-    rawPath.startsWith('https://localhost:5000')
-  ) {
-    rawPath = rawPath.replace(/^https?:\/\/(localhost|127\.0\.0\.1):5000/, '');
-  } else if (rawPath.startsWith('https://buconnects-backend-to2j.onrender.com')) {
-    rawPath = rawPath.replace('https://buconnects-backend-to2j.onrender.com', '');
-  }
-
-  // If it is an external URL (e.g. third-party image/avatar, Unsplash, Google profile), leave as is
-  if ((rawPath.startsWith('http://') || rawPath.startsWith('https://')) && !rawPath.includes('/uploads/')) {
-    return rawPath;
-  }
-
-  // If it starts with http(s) after the above, strip host if it points to uploads
+  // Resolve relative paths against the configured backend and repair legacy hosts.
   if (rawPath.startsWith('http://') || rawPath.startsWith('https://')) {
     try {
       const parsed = new URL(rawPath);
-      rawPath = parsed.pathname;
+      if (LEGACY_BACKEND_HOSTS.has(parsed.hostname) || parsed.origin === ACTIVE_BACKEND) {
+        return `${ACTIVE_BACKEND}${parsed.pathname}${parsed.search}${parsed.hash}`;
+      }
+      if (parsed.protocol === 'http:') parsed.protocol = 'https:';
+      return parsed.href;
     } catch {
-      // ignore
+      return '';
     }
   }
 
-  // Ensure leading slash
   const cleanPath = rawPath.startsWith('/') ? rawPath : `/${rawPath}`;
-  return `${activeBackend}${cleanPath}`;
+  return `${ACTIVE_BACKEND}${cleanPath}`;
 };
 
 export const getAvatarUrl = (path) => {

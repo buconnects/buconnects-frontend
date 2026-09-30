@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import io from 'socket.io-client';
+import { getMediaUrl } from '../utils/media';
 import './ConversationList.css';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
@@ -86,7 +87,7 @@ export default function ConversationList({ currentUserId, onSelectUser, activeTa
             ? new Date(user.lastMessageTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) 
             : '';
 
-          const avatarUrl = user.avatar_url || user.avatarUrl;
+          const avatarUrl = getMediaUrl(user.avatar_url || user.avatarUrl);
 
           return (
             <div

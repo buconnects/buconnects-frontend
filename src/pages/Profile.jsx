@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Camera, Check, Mail, Phone, UserRound } from 'lucide-react';
 import apiClient from '../services/apiClient';
+import { getMediaUrl } from '../utils/media';
 import './Profile.css';
 
 const emptyProfile = {
@@ -126,7 +127,7 @@ export default function Profile({ onProfileUpdated }) {
     );
   }
 
-  const displayedAvatar = previewUrl || profile.avatarUrl;
+  const displayedAvatar = previewUrl || getMediaUrl(profile.avatarUrl);
   const initials = (profile.fullName || 'User').charAt(0).toUpperCase();
   const joinedDate = profile.createdAt
     ? new Date(profile.createdAt).toLocaleDateString(undefined, { month: 'long', year: 'numeric' })

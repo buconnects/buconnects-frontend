@@ -10,6 +10,7 @@ import './Dashboard.css';
 import Navbar from '../components/Navbar';
 import SettingsPage from './Settings';
 import Profile from './Profile';
+import { getMediaUrl } from '../utils/media';
 import { useLocation, useNavigate } from 'react-router-dom';
 
 export default function Dashboard() {
@@ -444,7 +445,7 @@ export default function Dashboard() {
           <div className="user-profile-summary">
             <div className="user-avatar-small">
               {user?.avatar_url || user?.avatarUrl ? (
-                <img src={user.avatar_url || user.avatarUrl} alt="Your profile" />
+                <img src={getMediaUrl(user.avatar_url || user.avatarUrl)} alt="Your profile" />
               ) : (
                 (user?.name || user?.full_name || 'U').charAt(0).toUpperCase()
               )}
