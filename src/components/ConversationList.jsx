@@ -34,11 +34,11 @@ export default function ConversationList({ currentUserId, onSelectUser, activeTa
       .catch((err) => console.error('Failed to load conversations:', err));
 
     // 2. Listen for real-time presence updates
-    socket.emit('register_user', currentUserId);
-
-    socket.on('get_online_users', (usersList) => {
-      setOnlineUsers(usersList); // Array of online user IDs
-    });
+    const registerCurrentUser = () => socket.emit('register_user', currentUserId);
+    const handleOnlineUsers = (usersList) => setOnlineUsers(usersList);
+    socket.on('connect', registerCurrentUser);
+    socket.on('get_online_users', handleOnlineUsers);
+    if (socket.connected) registerCurrentUser();
 
     // 3. Update last message preview in real time
     socket.on('receive_message', (newMessage) => {
@@ -53,6 +53,7 @@ export default function ConversationList({ currentUserId, onSelectUser, activeTa
 
     return () => {
       socket.off('get_online_users');
+      socket.off('connect', registerCurrentUser);
       socket.off('receive_message');
     };
   }, [currentUserId, activeTargetId, onSelectUser]);

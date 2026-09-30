@@ -295,7 +295,11 @@ export default function Dashboard() {
   useEffect(() => {
     if (!user?.id) return undefined;
     const notificationSocket = io(import.meta.env.VITE_API_URL || 'http://localhost:5000');
-    notificationSocket.emit('register_user', user.id);
+    const registerCurrentUser = () => notificationSocket.emit('register_user', user.id);
+    const acknowledgeDeliveryProbe = (_probe, acknowledge) => acknowledge?.();
+    notificationSocket.on('connect', registerCurrentUser);
+    notificationSocket.on('message_delivery_probe', acknowledgeDeliveryProbe);
+    if (notificationSocket.connected) registerCurrentUser();
     notificationSocket.on('new_notification', (notification) => {
       setNotifications((previous) => [{ ...notification, id: `${Date.now()}-${notification.type}` }, ...previous]);
       setUnreadCount((count) => count + 1);
@@ -317,6 +321,8 @@ export default function Dashboard() {
     const refreshTimer = window.setInterval(refreshNotifications, 15000);
     return () => {
       window.clearInterval(refreshTimer);
+      notificationSocket.off('connect', registerCurrentUser);
+      notificationSocket.off('message_delivery_probe', acknowledgeDeliveryProbe);
       notificationSocket.disconnect();
     };
   }, [user?.id]);

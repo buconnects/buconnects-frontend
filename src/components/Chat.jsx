@@ -23,6 +23,7 @@ export default function Chat({ currentUserId, currentUserName, targetUserId: pro
   const [selectedImagePreview, setSelectedImagePreview] = useState(null);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadError, setUploadError] = useState('');
+  const [isTargetOnline, setIsTargetOnline] = useState(false);
   const [replyTo, setReplyTo] = useState(null);
   const [isRecording, setIsRecording] = useState(false);
   const [recordingSeconds, setRecordingSeconds] = useState(0);
@@ -67,7 +68,24 @@ export default function Chat({ currentUserId, currentUserName, targetUserId: pro
   useEffect(() => {
     if (!targetUserId || !currentUserId) return;
 
-    socket.emit('register_user', currentUserId);
+    const registerCurrentUser = () => socket.emit('register_user', currentUserId);
+    const handleOnlineUsers = (userIds) => {
+      setIsTargetOnline(userIds.some((userId) => String(userId) === String(targetUserId)));
+    };
+    const handleMessageSent = ({ clientMessageId }) => {
+      if (clientMessageId) updateMessageStatus(clientMessageId, 'sent');
+    };
+    const handleMessageDelivered = ({ clientMessageId }) => {
+      if (clientMessageId) updateMessageStatus(clientMessageId, 'delivered');
+    };
+    const acknowledgeDeliveryProbe = (_probe, acknowledge) => acknowledge?.();
+
+    socket.on('connect', registerCurrentUser);
+    socket.on('get_online_users', handleOnlineUsers);
+    socket.on('message_sent', handleMessageSent);
+    socket.on('message_delivered', handleMessageDelivered);
+    socket.on('message_delivery_probe', acknowledgeDeliveryProbe);
+    if (socket.connected) registerCurrentUser();
     socket.emit('join_room', roomId);
 
     axios.get(`${API_BASE_URL}/api/users/history/${roomId}`)
@@ -81,7 +99,7 @@ export default function Chat({ currentUserId, currentUserName, targetUserId: pro
               ...msg,
               is_deleted: isDeleted,
               deleted_at: isDeleted ? (msg.deleted_at || new Date().toISOString()) : null,
-              status: msg.is_read ? 'read' : 'delivered',
+              status: msg.is_read ? 'read' : 'sent',
               message: isDeleted ? 'This message was deleted' : msg.message,
               message_type: isDeleted ? 'text' : msg.message_type,
               file_url: isDeleted ? null : msg.file_url,
@@ -93,12 +111,13 @@ export default function Chat({ currentUserId, currentUserName, targetUserId: pro
       })
       .catch(err => console.error('Error loading history:', err));
 
-    const handleReceiveMessage = (newMessage) => {
+    const handleReceiveMessage = (newMessage, acknowledge) => {
       const sender = newMessage.sender_id || newMessage.senderId;
       if (String(sender) === String(currentUserId)) return;
 
       setChatLog((prev) => [...prev, { ...newMessage, is_read: true, status: 'read' }]);
       setIsTyping(false);
+      acknowledge?.();
       markMessagesAsRead();
     };
 
@@ -154,6 +173,11 @@ export default function Chat({ currentUserId, currentUserName, targetUserId: pro
 
     return () => {
       socket.off('receive_message', handleReceiveMessage);
+      socket.off('connect', registerCurrentUser);
+      socket.off('get_online_users', handleOnlineUsers);
+      socket.off('message_sent', handleMessageSent);
+      socket.off('message_delivered', handleMessageDelivered);
+      socket.off('message_delivery_probe', acknowledgeDeliveryProbe);
       socket.off('message_deleted', handleMessageDeleted);
       socket.off('messages_marked_read', handleMessagesRead);
       socket.off('user_typing', handleUserTyping);
@@ -411,7 +435,6 @@ export default function Chat({ currentUserId, currentUserName, targetUserId: pro
     socket.emit('send_message', messageData);
     setChatLog((prev) => [...prev, messageData]);
 
-    setTimeout(() => updateMessageStatus(tempId, 'delivered'), 600);
     setMessage('');
     setSelectedFile(null);
     setReplyTo(null);
@@ -433,7 +456,10 @@ export default function Chat({ currentUserId, currentUserName, targetUserId: pro
         )}
         <div className="user-info">
           <h4>{targetUserName}</h4>
-          <span className="status-badge"><span className="dot"></span> Online</span>
+          <span className="status-badge">
+            <span className={`dot ${isTargetOnline ? 'online' : 'offline'}`}></span>
+            {isTargetOnline ? 'Online' : 'Offline'}
+          </span>
         </div>
       </div>
 
@@ -513,8 +539,8 @@ export default function Chat({ currentUserId, currentUserName, targetUserId: pro
                 <div className="message-meta">
                   <span className="timestamp">{time}</span>
                   {isMine && !isDeleted && status && (
-                    <span className={`read-status ${status === 'read' ? 'read' : 'sent'}`}>
-                      {status === 'read' ? '✓✓' : status === 'delivered' ? '✓✓' : '✓'}
+                    <span className={`read-status ${status}`} title={status}>
+                      {status === 'read' || status === 'delivered' ? '✓✓' : '✓'}
                     </span>
                   )}
                 </div>

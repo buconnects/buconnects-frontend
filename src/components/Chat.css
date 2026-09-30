@@ -108,7 +108,14 @@
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background-color: #10b981; /* Online green */
+}
+
+.status-badge .dot.online {
+  background-color: #10b981;
+}
+
+.status-badge .dot.offline {
+  background-color: #94a3b8;
 }
 
 /* --- Chat Area --- */
@@ -250,6 +257,10 @@
 
 .read-status.read {
   color: #bfdbfe; /* Light blue double check */
+}
+
+.read-status.delivered {
+  color: rgba(255, 255, 255, 0.8);
 }
 
 /* --- Typing Indicator --- */
