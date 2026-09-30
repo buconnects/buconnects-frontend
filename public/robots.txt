@@ -1,0 +1,10 @@
+User-agent: *
+Allow: /
+Disallow: /dashboard
+Disallow: /settings
+Disallow: /chat
+Disallow: /admin
+Disallow: /developer
+Disallow: /unauthorized
+
+Sitemap: https://buconnects-frontend-one.vercel.app/sitemap.xml

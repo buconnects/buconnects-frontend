@@ -11,6 +11,7 @@ import Chat from './components/Chat';
 import ChatPage from './pages/ChatPage';
 import Settings from './pages/Settings';
 import BackButton from './components/BackButton';
+import SEOHead from './components/SEOHead';
 import { useAuth } from './context/AuthContext';
 import { normalizeRole } from './utils/roles';
 
@@ -27,6 +28,57 @@ function AppContent() {
   const { isAuthenticated, user } = useAuth();
   const normalizedRole = normalizeRole(user?.role);
   const isPublicPage = ['/', '/login', '/register', '/unauthorized'].includes(location.pathname);
+  const pageSEO = {
+    '/': {
+      title: 'buCONNECTS | Campus Community',
+      description: 'Connect with fellow students, follow campus updates and events, find accommodation, and exchange items.',
+    },
+    '/login': {
+      title: 'Sign in | buCONNECTS',
+      description: 'Sign in to your buCONNECTS campus community account.',
+    },
+    '/register': {
+      title: 'Create an account | buCONNECTS',
+      description: 'Join buCONNECTS to connect with students and keep up with campus life.',
+    },
+    '/unauthorized': {
+      title: 'Access restricted | buCONNECTS',
+      description: 'This buCONNECTS page is restricted.',
+      noIndex: true,
+    },
+    '/dashboard': {
+      title: 'Dashboard | buCONNECTS',
+      description: 'Your private buCONNECTS campus dashboard.',
+      noIndex: true,
+    },
+    '/settings': {
+      title: 'Settings | buCONNECTS',
+      description: 'Manage your buCONNECTS account settings.',
+      noIndex: true,
+    },
+    '/chat': {
+      title: 'Messages | buCONNECTS',
+      description: 'Private conversations on buCONNECTS.',
+      noIndex: true,
+    },
+    '/admin': {
+      title: 'Administration | buCONNECTS',
+      description: 'Private buCONNECTS administration tools.',
+      noIndex: true,
+    },
+    '/developer': {
+      title: 'Developer tools | buCONNECTS',
+      description: 'Private buCONNECTS developer tools.',
+      noIndex: true,
+    },
+  };
+  const currentSEO = location.pathname.startsWith('/chat/')
+    ? pageSEO['/chat']
+    : pageSEO[location.pathname] || {
+      title: 'buCONNECTS',
+      description: 'The buCONNECTS campus community.',
+      noIndex: true,
+    };
 
   useEffect(() => {
     if (isAuthenticated && isPublicPage) {
@@ -83,6 +135,7 @@ function AppContent() {
 
   return (
     <>
+      <SEOHead {...currentSEO} pathname={location.pathname === '/login' ? '/' : location.pathname} />
       {!isPublicPage && <BackButton />}
       <Routes>
         {/* Public Routes */}
