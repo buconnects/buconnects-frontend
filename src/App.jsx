@@ -10,6 +10,7 @@ import Register from './pages/auth/Register';
 import Chat from './components/Chat';
 import ChatPage from './pages/ChatPage';
 import Settings from './pages/Settings';
+import LandingPage from './pages/LandingPage';
 import BackButton from './components/BackButton';
 import SEOHead from './components/SEOHead';
 import { useAuth } from './context/AuthContext';
@@ -30,16 +31,18 @@ function AppContent() {
   const isPublicPage = ['/', '/login', '/register', '/unauthorized'].includes(location.pathname);
   const pageSEO = {
     '/': {
-      title: 'buCONNECTS | Campus Community',
-      description: 'Connect with fellow students, follow campus updates and events, find accommodation, and exchange items.',
+      title: 'Busitema University Student Community | buCONNECTS',
+      description: 'Join buCONNECTS, the Busitema University student community for campus updates, events, student accommodation, marketplace listings, and student connections.',
     },
     '/login': {
       title: 'Sign in | buCONNECTS',
       description: 'Sign in to your buCONNECTS campus community account.',
+      noIndex: true,
     },
     '/register': {
       title: 'Create an account | buCONNECTS',
       description: 'Join buCONNECTS to connect with students and keep up with campus life.',
+      noIndex: true,
     },
     '/unauthorized': {
       title: 'Access restricted | buCONNECTS',
@@ -135,11 +138,11 @@ function AppContent() {
 
   return (
     <>
-      <SEOHead {...currentSEO} pathname={location.pathname === '/login' ? '/' : location.pathname} />
+      <SEOHead {...currentSEO} pathname={location.pathname} />
       {!isPublicPage && <BackButton />}
       <Routes>
         {/* Public Routes */}
-        <Route path="/" element={<Login />} />
+        <Route path="/" element={<LandingPage />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/unauthorized" element={<Unauthorized />} />
